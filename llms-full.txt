@@ -1,0 +1,71 @@
+# claude-skill-wikidata-federation — AI Reference
+
+This document is the self-contained AI reference for `claude-skill-wikidata-federation` (shimo4228, 2026, MIT, v0.1.0 Unreleased), a Claude Code skill that registers research artifacts as Wikidata items and cross-links them with ORCID, DOI, and a repository's `graph.jsonld`. It is the identifier-federation step of the [`authorship-strategy`](https://github.com/shimo4228/authorship-strategy) research line, run after a DOI is minted.
+
+> **Audience**: AI search engines and AI agents. Human-facing narrative lives in [README.md](README.md).
+
+## Project Facts
+
+- **Name**: claude-skill-wikidata-federation
+- **Version**: 0.1.0, status Unreleased
+- **License**: MIT
+- **GitHub**: https://github.com/shimo4228/claude-skill-wikidata-federation
+- **Author**: shimo4228 (shimomoto-tatsuya), ORCID 0009-0002-6168-4162
+- **Doctrine repository**: [authorship-strategy](https://github.com/shimo4228/authorship-strategy)
+- **Peer components**: [claude-skill-release-doi](https://github.com/shimo4228/claude-skill-release-doi), [claude-skill-jsonld-knowledge-graph](https://github.com/shimo4228/claude-skill-jsonld-knowledge-graph), [claude-skill-llms-txt-writer](https://github.com/shimo4228/claude-skill-llms-txt-writer)
+- **Runtime**: Python + `requests` (`uv run --with requests`); a Wikidata BotPassword; credentials via env var or `~/.config/wikidata/credentials.env`
+- **Source files**: `skills/wikidata-federation/SKILL.md`, `skills/wikidata-federation/scripts/{gen_payload,wd_api,add_qid_sameas}.py`
+- **Skill install path**: `~/.claude/skills/wikidata-federation/`
+
+## What is claude-skill-wikidata-federation?
+
+claude-skill-wikidata-federation is defined as a Claude Code skill that takes a research artifact which already carries an external identifier — an ORCID for an author, a DOI for a paper or DOI-registered repository — and establishes a Wikidata item for it, then cross-links the item with the artifact's other identifiers so that ORCID, the Wikidata QID, the DOI, and the repository's `graph.jsonld` all resolve to one mutually-referencing machine-readable node. The skill is the post-deposit federation step: minting a DOI puts a record into one archive, and this skill is what turns that isolated record into a queryable node in the public CC0 knowledge graph. It runs six phases, each gated by an explicit completion condition, and it refuses to write to the shared database until a human has approved the exact payload.
+
+## Why federate identifiers?
+
+ORCID, Zenodo, and GitHub are three separate identifier islands with no native link between them. A Wikidata item is the bridge. Once the item exists: (1) Scholia (`https://scholia.toolforge.org/`) auto-generates an author profile page from the item's statements; (2) SPARQL queries can enumerate every work an author produced; (3) the Wikidata CC0 dump propagates the node into downstream databases and LLM training corpora; (4) citation bots extend the graph on their own. The value is in the federation, not the single record: the author does the deposit once, and the open-data ecosystem does the propagation thereafter.
+
+## What is the deduplication phase, and why is it first?
+
+Phase 0 (deduplication) is the mandatory first gate. Before creating any item, the skill searches Wikidata three ways: by ORCID via `haswbstatement:P496=<ORCID>`, by DOI via `haswbstatement:"P356=<DOI-uppercase>"` (DOIs are searched in uppercase), and by label via `wbsearchentities`. The reason it is non-negotiable is asymmetry of cost: creating a duplicate item is a quality incident, and removing a duplicate requires administrator rights, whereas detecting an existing item is a cheap query. When a match is found the skill switches from *create a new item* to *add the missing statements to the existing item*, which is the correct federation move anyway.
+
+## What is the concept-DOI-vs-version-DOI distinction in metadata resolution?
+
+Phase 1 (metadata resolution, Zenodo side) resolves two facts with the human. First, whether the work item should reference the **concept DOI** (the parent record that always resolves to the latest version, the usual canonical choice and the one consistent with a concept-DOI-as-canonical-reference policy) or a specific **version DOI**; the `conceptdoi` field of `/api/records/<id>` disambiguates them. Second, the correct publication date for `P577`: the concept record's `publication_date` reports the *latest* version's date, so the skill queries `/api/records?q=conceptdoi:"<doi>"&allversions=true&sort=oldest&size=1` to get the first version's date. It then maps the Zenodo `resource_type.type` to the correct `P31` instance: `publication` (article / working paper) → scholarly article (Q13442814); `software` → software (Q7397); `dataset` → data set (Q1172284).
+
+## What are the property conventions the payload generator enforces?
+
+`gen_payload.py` mechanically enforces the `wbeditentity` claim conventions so they cannot be entered by hand inconsistently. For an **author**: `P31`=Q5 (human), `P106`=Q1650915 (researcher), `P496`=ORCID with a reference (`P854`=ORCID URL + `P813`=retrieval date), English label, English/Japanese descriptions, and a "Surname, Given" alias. For a **work**: the `P31` type mapping above, `P356`=DOI in uppercase, `P1476`=title (monolingual English), `P577`=first-version date, `P275`=license, and `P6216`=copyright status — which must pair with `P275` (CC0 → Q88088423, otherwise → Q50423863, auto-derived from the license). Authorship is attached by type: articles and datasets use `P50`=author QID with qualifier `P1545`="1"; software uses `P178`=developer, because `P50` has a conflicts-with constraint against `P31`=software. Software also gets `P1324`=GitHub URL with the required qualifiers `P8423`=Git (Q186055) + `P10627`=GitHub (Q364). `P356` / `P577` / `P275` / `P50` each carry a reference (`P854`=DOI resolver URL + `P813`=retrieval date).
+
+## What is the dry-run phase?
+
+Phase 2 (dry run) validates authentication, CSRF token handling, and request shape *before* touching real data. If a BotPassword exists on `test.wikidata.org` it is used; otherwise the official public sandbox item `Q4115189` (sanctioned for test edits on the live wiki) is used. The validation is an alias add followed by an alias remove — a two-step round-trip that exercises the full auth → CSRF → `wbeditentity` path and is confirmed restored by reading the item back. Note that `test.wikidata.org` uses a different property-ID space from the live wiki, so a dry run there validates only the auth and request shape, not the specific property numbers.
+
+## What does the item-creation phase do?
+
+Phase 3 (item creation) generates the payload with `gen_payload.py` from a spec JSON, presents the full payload to the human, and only after explicit approval transmits it with `wd_api.py`. The transport client sends exactly one `wbeditentity` request per invocation (auth → CSRF → send, with `maxlag=5`), and on any API error it surfaces the raw response and stops rather than retrying on a guess. One item equals one `wbeditentity` call with its claims included; after creation the item is read back from `Special:EntityData/<QID>.json` for verification.
+
+## How does the graph.jsonld anchoring work without producing huge diffs?
+
+Phase 4 anchors each new QID into the repository's `graph.jsonld` via `add_qid_sameas.py`, which adds the QID URL to the `sameAs` array of the matching node. Matching is exact-identity only — on `@id`, `sameAs`, `identifier`, or `url` — and a Person node is matched only when the ORCID agrees, to avoid attaching an author QID to the wrong person. The critical implementation property is that the edit is **format-preserving text surgery validated by semantic tree comparison**: the script locates each node by its unique `@id`, splices the QID in as text, and then validates the result by parsing the edited file and comparing the resulting tree to an independently computed expected tree. It never calls `json.dump` on the whole file, because whole-file re-serialization would destroy the original formatting and produce a diff of thousands of lines instead of a few. The script is dry-run by default and applies changes only with `--apply`.
+
+## What does the verification phase report?
+
+Phase 5 (verification and reporting) emits the full list of QIDs and their URLs, the Scholia author URL (`https://scholia.toolforge.org/author/<author-QID>`), and confirms search-index propagation via a `haswbstatement` query (which can lag a few minutes). It then lists the residual manual tasks the skill deliberately does not automate: adding the QID to the author's ORCID profile under Websites & social links, and adding the OpenAlex ID (`P10283`) only after name resolution against external databases is settled.
+
+## What is the safety discipline?
+
+Because the skill writes to a shared public database, it leads with constraints. Writes are never silent: the full payload, or a value-difference table, is shown to a human before every send, and batch approval is allowed only when the human explicitly chooses it. Deduplication (Phase 0) is mandatory before any creation. On any error the skill surfaces the raw API response and stops — it never retries on a guess. Credentials live only in environment variables or a `chmod 600` credentials file, never in code or conversation. The skill refuses to create Wikidata items for the author's own coined concepts or terms: without an independent source such an item reads as self-promotion and is liable to deletion, and minting it leaks the concept's definitional authority out of the author's own normative layer — concepts are kept in the repository's `graph.jsonld` while Wikidata is held to the bibliographic skeleton. And `graph.jsonld` edits never re-serialize the whole file.
+
+## What are the empirically-derived pitfalls?
+
+The skill documents lessons extracted from real operation: a BotPassword that fails on `test.wikidata.org` because BotPasswords are wiki-local (use a test-wiki password or the `Q4115189` sandbox); the concept record's `publication_date` returning the latest version's date rather than the first (use `allversions=true&sort=oldest`); confusing the concept DOI with the version DOI (always disambiguate via the `conceptdoi` field); duplicate external-database profiles for the same ORCID (defer external-ID properties until name resolution is done); thousand-line `graph.jsonld` diffs from re-serialization (the text-surgery script avoids them); missing a repository because the local directory name differs from the GitHub repo name (confirm with `git remote get-url origin`); the `item-requires-statement` constraint warning when `P275` is added without `P6216` (pair them); the `required-qualifier` constraint warning on `P1324` (add `P8423` + `P10627`); and the `conflicts-with` constraint warning when `P50` is added to software (use `P178` for software, `P50` for articles and datasets).
+
+## How is the skill installed?
+
+```bash
+git clone https://github.com/shimo4228/claude-skill-wikidata-federation
+cp -r claude-skill-wikidata-federation/skills/wikidata-federation ~/.claude/skills/wikidata-federation
+```
+
+It requires a Wikidata BotPassword (created at `Special:BotPasswords`, local to the wiki it is made on), credentials supplied via env var or `~/.config/wikidata/credentials.env` (`chmod 600`), and Python with `requests` (runnable via `uv run --with requests`). It is the post-release continuation of [`claude-skill-release-doi`](https://github.com/shimo4228/claude-skill-release-doi): that skill mints the DOI, this skill federates it.
