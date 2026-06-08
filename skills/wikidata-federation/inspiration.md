@@ -69,10 +69,10 @@ safety gates on every registration.
 The skill explicitly hands off to other ecosystem skills at its
 boundaries:
 
-- It runs *after* [`claude-skill-release-doi`](https://github.com/shimo4228/claude-skill-release-doi):
+- It runs *after* [`release-doi`](https://github.com/shimo4228/release-doi):
   that skill mints the DOI; this skill federates it onto Wikidata.
 - Its Phase 4 injects QIDs into the `graph.jsonld` whose schema is
-  designed by [`claude-skill-jsonld-knowledge-graph`](https://github.com/shimo4228/claude-skill-jsonld-knowledge-graph).
+  designed by [`jsonld-knowledge-graph`](https://github.com/shimo4228/jsonld-knowledge-graph).
 - After it updates a `graph.jsonld`, the repository's own mirror-sync
   workflow (an `hf-sync`-style step) propagates the change to Hugging
   Face Datasets.

@@ -33,6 +33,6 @@ The skill assumes a Wikidata write target and a repository carrying a `graph.jso
 
 | Skill | Role | When |
 |---|---|---|
-| `claude-skill-release-doi` | Release runbook that mints the DOI | Before this skill — produces the artifact this skill federates |
-| `claude-skill-jsonld-knowledge-graph` | Designs the `graph.jsonld` schema | Before this skill — Phase 4 injects QIDs into that graph |
+| `release-doi` | Release runbook that mints the DOI | Before this skill — produces the artifact this skill federates |
+| `jsonld-knowledge-graph` | Designs the `graph.jsonld` schema | Before this skill — Phase 4 injects QIDs into that graph |
 | `hf-sync` | Hugging Face Datasets mirror sync | After this skill — propagates the updated `graph.jsonld` |

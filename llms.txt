@@ -1,4 +1,4 @@
-# claude-skill-wikidata-federation
+# wikidata-federation
 
 > A Claude Code skill (MIT, v0.1.0 Unreleased) that registers researchers, papers, and DOI-registered repositories as Wikidata items and cross-links them so that ORCID ↔ Wikidata QID ↔ DOI ↔ `graph.jsonld` form one mutually-referencing machine-readable node. The identifier-federation step of the [`authorship-strategy`](https://github.com/shimo4228/authorship-strategy) research line, run after a DOI is minted. Safety-first: every write is shown to a human before sending, deduplication runs before any creation, credentials are never hardcoded.
 
@@ -33,9 +33,9 @@ This skill writes to a shared public database, so it leads with constraints: no 
 
 Other component skills of the same framework:
 
-- [claude-skill-release-doi](https://github.com/shimo4228/claude-skill-release-doi): the release runbook this skill continues — it mints the DOI, this skill federates it
-- [claude-skill-jsonld-knowledge-graph](https://github.com/shimo4228/claude-skill-jsonld-knowledge-graph): designs the `graph.jsonld` this skill's Phase 4 anchors QIDs into
-- [claude-skill-llms-txt-writer](https://github.com/shimo4228/claude-skill-llms-txt-writer): the AI-facing-documentation peer in the same Layer 4 tactic
+- [release-doi](https://github.com/shimo4228/release-doi): the release runbook this skill continues — it mints the DOI, this skill federates it
+- [jsonld-knowledge-graph](https://github.com/shimo4228/jsonld-knowledge-graph): designs the `graph.jsonld` this skill's Phase 4 anchors QIDs into
+- [llms-txt-writer](https://github.com/shimo4228/llms-txt-writer): the AI-facing-documentation peer in the same Layer 4 tactic
 
 Terminology: *sibling* is reserved for research-line-level peers; at the component-skill level the term *peer component* is used.
 

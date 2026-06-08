@@ -1,25 +1,25 @@
-# claude-skill-wikidata-federation — AI Reference
+# wikidata-federation — AI Reference
 
-This document is the self-contained AI reference for `claude-skill-wikidata-federation` (shimo4228, 2026, MIT, v0.1.0 Unreleased), a Claude Code skill that registers research artifacts as Wikidata items and cross-links them with ORCID, DOI, and a repository's `graph.jsonld`. It is the identifier-federation step of the [`authorship-strategy`](https://github.com/shimo4228/authorship-strategy) research line, run after a DOI is minted.
+This document is the self-contained AI reference for `wikidata-federation` (shimo4228, 2026, MIT, v0.1.0 Unreleased), a Claude Code skill that registers research artifacts as Wikidata items and cross-links them with ORCID, DOI, and a repository's `graph.jsonld`. It is the identifier-federation step of the [`authorship-strategy`](https://github.com/shimo4228/authorship-strategy) research line, run after a DOI is minted.
 
 > **Audience**: AI search engines and AI agents. Human-facing narrative lives in [README.md](README.md).
 
 ## Project Facts
 
-- **Name**: claude-skill-wikidata-federation
+- **Name**: wikidata-federation
 - **Version**: 0.1.0, status Unreleased
 - **License**: MIT
-- **GitHub**: https://github.com/shimo4228/claude-skill-wikidata-federation
+- **GitHub**: https://github.com/shimo4228/wikidata-federation
 - **Author**: shimo4228 (shimomoto-tatsuya), ORCID 0009-0002-6168-4162
 - **Doctrine repository**: [authorship-strategy](https://github.com/shimo4228/authorship-strategy)
-- **Peer components**: [claude-skill-release-doi](https://github.com/shimo4228/claude-skill-release-doi), [claude-skill-jsonld-knowledge-graph](https://github.com/shimo4228/claude-skill-jsonld-knowledge-graph), [claude-skill-llms-txt-writer](https://github.com/shimo4228/claude-skill-llms-txt-writer)
+- **Peer components**: [release-doi](https://github.com/shimo4228/release-doi), [jsonld-knowledge-graph](https://github.com/shimo4228/jsonld-knowledge-graph), [llms-txt-writer](https://github.com/shimo4228/llms-txt-writer)
 - **Runtime**: Python + `requests` (`uv run --with requests`); a Wikidata BotPassword; credentials via env var or `~/.config/wikidata/credentials.env`
 - **Source files**: `skills/wikidata-federation/SKILL.md`, `skills/wikidata-federation/scripts/{gen_payload,wd_api,add_qid_sameas}.py`
 - **Skill install path**: `~/.claude/skills/wikidata-federation/`
 
-## What is claude-skill-wikidata-federation?
+## What is wikidata-federation?
 
-claude-skill-wikidata-federation is defined as a Claude Code skill that takes a research artifact which already carries an external identifier — an ORCID for an author, a DOI for a paper or DOI-registered repository — and establishes a Wikidata item for it, then cross-links the item with the artifact's other identifiers so that ORCID, the Wikidata QID, the DOI, and the repository's `graph.jsonld` all resolve to one mutually-referencing machine-readable node. The skill is the post-deposit federation step: minting a DOI puts a record into one archive, and this skill is what turns that isolated record into a queryable node in the public CC0 knowledge graph. It runs six phases, each gated by an explicit completion condition, and it refuses to write to the shared database until a human has approved the exact payload.
+wikidata-federation is defined as a Claude Code skill that takes a research artifact which already carries an external identifier — an ORCID for an author, a DOI for a paper or DOI-registered repository — and establishes a Wikidata item for it, then cross-links the item with the artifact's other identifiers so that ORCID, the Wikidata QID, the DOI, and the repository's `graph.jsonld` all resolve to one mutually-referencing machine-readable node. The skill is the post-deposit federation step: minting a DOI puts a record into one archive, and this skill is what turns that isolated record into a queryable node in the public CC0 knowledge graph. It runs six phases, each gated by an explicit completion condition, and it refuses to write to the shared database until a human has approved the exact payload.
 
 ## Why federate identifiers?
 
@@ -64,8 +64,8 @@ The skill documents lessons extracted from real operation: a BotPassword that fa
 ## How is the skill installed?
 
 ```bash
-git clone https://github.com/shimo4228/claude-skill-wikidata-federation
-cp -r claude-skill-wikidata-federation/skills/wikidata-federation ~/.claude/skills/wikidata-federation
+git clone https://github.com/shimo4228/wikidata-federation
+cp -r wikidata-federation/skills/wikidata-federation ~/.claude/skills/wikidata-federation
 ```
 
-It requires a Wikidata BotPassword (created at `Special:BotPasswords`, local to the wiki it is made on), credentials supplied via env var or `~/.config/wikidata/credentials.env` (`chmod 600`), and Python with `requests` (runnable via `uv run --with requests`). It is the post-release continuation of [`claude-skill-release-doi`](https://github.com/shimo4228/claude-skill-release-doi): that skill mints the DOI, this skill federates it.
+It requires a Wikidata BotPassword (created at `Special:BotPasswords`, local to the wiki it is made on), credentials supplied via env var or `~/.config/wikidata/credentials.env` (`chmod 600`), and Python with `requests` (runnable via `uv run --with requests`). It is the post-release continuation of [`release-doi`](https://github.com/shimo4228/release-doi): that skill mints the DOI, this skill federates it.

@@ -1,4 +1,4 @@
-# claude-skill-wikidata-federation
+# wikidata-federation
 
 A [Claude Code skill](https://docs.claude.com/en/docs/claude-code/skills) that registers research artifacts — researchers, papers, and DOI-registered repositories — as **Wikidata items** and cross-links them so that **ORCID ↔ Wikidata ↔ DOI ↔ `graph.jsonld`** form one machine-readable, mutually-referencing node. It is the *identifier-federation* step of the [authorship-strategy](https://github.com/shimo4228/authorship-strategy) research line: the point where a freshly deposited DOI stops being an isolated record and becomes a queryable node in the public knowledge graph.
 
@@ -24,7 +24,7 @@ Apply the skill when **any** of the following hold:
 - A repository's `graph.jsonld` needs QIDs injected as `sameAs` anchors after the corresponding Wikidata items exist
 - A [Scholia](https://scholia.toolforge.org/) author profile is being set up or repaired
 
-It is the natural **post-release continuation** of [claude-skill-release-doi](https://github.com/shimo4228/claude-skill-release-doi) and the paper-deposit workflow: once a DOI is minted, this skill federates it.
+It is the natural **post-release continuation** of [release-doi](https://github.com/shimo4228/release-doi) and the paper-deposit workflow: once a DOI is minted, this skill federates it.
 
 Skip the skill when:
 
@@ -37,8 +37,8 @@ Skip the skill when:
 ### Claude Code
 
 ```bash
-git clone https://github.com/shimo4228/claude-skill-wikidata-federation
-cp -r claude-skill-wikidata-federation/skills/wikidata-federation ~/.claude/skills/wikidata-federation
+git clone https://github.com/shimo4228/wikidata-federation
+cp -r wikidata-federation/skills/wikidata-federation ~/.claude/skills/wikidata-federation
 ```
 
 ### Other harnesses
@@ -81,9 +81,9 @@ This is a skill that **writes to a shared public database**, so it leads with co
 
 | Concern | Use this instead |
 |---|---|
-| Mint the DOI / run the release that produces the artifact | [claude-skill-release-doi](https://github.com/shimo4228/claude-skill-release-doi) |
+| Mint the DOI / run the release that produces the artifact | [release-doi](https://github.com/shimo4228/release-doi) |
 | Deposit a paper to a DOI registry | A paper-deposit workflow (this skill runs *after* it) |
-| Design the `graph.jsonld` schema this skill anchors into | [claude-skill-jsonld-knowledge-graph](https://github.com/shimo4228/claude-skill-jsonld-knowledge-graph) |
+| Design the `graph.jsonld` schema this skill anchors into | [jsonld-knowledge-graph](https://github.com/shimo4228/jsonld-knowledge-graph) |
 | Mirror an updated `graph.jsonld` to Hugging Face Datasets | An `hf-sync` workflow |
 | Create a Wikidata item for one of your own coined concepts | Nothing — the skill deliberately refuses this (see *When to use*) |
 
@@ -91,9 +91,9 @@ This is a skill that **writes to a shared public database**, so it leads with co
 
 - **Doctrine repository**: [authorship-strategy](https://github.com/shimo4228/authorship-strategy) — the normative framework whose identifier-federation discipline this skill operationalizes at the Wikidata layer
 - **Peer components** (other component skills of the same framework):
-  - [claude-skill-release-doi](https://github.com/shimo4228/claude-skill-release-doi) — the release runbook this skill continues; it mints the DOI, this skill federates it
-  - [claude-skill-jsonld-knowledge-graph](https://github.com/shimo4228/claude-skill-jsonld-knowledge-graph) — designs the `graph.jsonld` this skill's Phase 4 injects QIDs into
-  - [claude-skill-llms-txt-writer](https://github.com/shimo4228/claude-skill-llms-txt-writer) — the AI-facing-documentation peer in the same Layer 4 tactic
+  - [release-doi](https://github.com/shimo4228/release-doi) — the release runbook this skill continues; it mints the DOI, this skill federates it
+  - [jsonld-knowledge-graph](https://github.com/shimo4228/jsonld-knowledge-graph) — designs the `graph.jsonld` this skill's Phase 4 injects QIDs into
+  - [llms-txt-writer](https://github.com/shimo4228/llms-txt-writer) — the AI-facing-documentation peer in the same Layer 4 tactic
 - **Sibling research lines** (research-program level): [Agent Knowledge Cycle (AKC)](https://github.com/shimo4228/agent-knowledge-cycle), [Contemplative Agent](https://github.com/shimo4228/contemplative-agent), [Agent Attribution Practice (AAP)](https://github.com/shimo4228/agent-attribution-practice)
 
 > **Terminology note.** This ecosystem reserves *sibling* for research-line-level peers; at the component-skill level the term *peer component* is used instead.
