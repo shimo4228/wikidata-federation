@@ -1,5 +1,7 @@
 # wikidata-federation
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shimo4228/wikidata-federation)
+
 A [Claude Code skill](https://docs.claude.com/en/docs/claude-code/skills) that registers research artifacts — researchers, papers, and DOI-registered repositories — as **Wikidata items** and cross-links them so that **ORCID ↔ Wikidata ↔ DOI ↔ `graph.jsonld`** form one machine-readable, mutually-referencing node. It is the *identifier-federation* step of the [authorship-strategy](https://github.com/shimo4228/authorship-strategy) research line: the point where a freshly deposited DOI stops being an isolated record and becomes a queryable node in the public knowledge graph.
 
 The skill is **harness-aware where it has to be** (it knows the Wikidata `wbeditentity` API, the property/QID conventions for authors vs papers vs software, the Zenodo concept-vs-version DOI distinction, and the `graph.jsonld` `sameAs` shape) but **safety-first throughout**: every write is presented to a human in full before it is sent, deduplication runs before any creation, and credentials live only in environment variables or a `chmod 600` file — never in code or conversation.
