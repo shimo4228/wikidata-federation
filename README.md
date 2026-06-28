@@ -1,6 +1,6 @@
 # wikidata-federation
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shimo4228/wikidata-federation) [![GitMCP](https://img.shields.io/endpoint?url=https://gitmcp.io/badge/shimo4228/wikidata-federation)](https://gitmcp.io/shimo4228/wikidata-federation) [![View Code Wiki](https://assets.codewiki.google/readme-badge/static.svg)](https://codewiki.google/github.com/shimo4228/wikidata-federation)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shimo4228/wikidata-federation) [![GitMCP](https://img.shields.io/endpoint?url=https://gitmcp.io/badge/shimo4228/wikidata-federation)](https://gitmcp.io/shimo4228/wikidata-federation)
 
 A [Claude Code skill](https://docs.claude.com/en/docs/claude-code/skills) that registers research artifacts — researchers, papers, and DOI-registered repositories — as **Wikidata items** and cross-links them so that **ORCID ↔ Wikidata ↔ DOI ↔ `graph.jsonld`** form one machine-readable, mutually-referencing node. It is the *identifier-federation* step of the [authorship-strategy](https://github.com/shimo4228/authorship-strategy) research line: the point where a freshly deposited DOI stops being an isolated record and becomes a queryable node in the public knowledge graph.
 
